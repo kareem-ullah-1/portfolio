@@ -1,0 +1,597 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-bg: #050505;
+  --color-fg: #f5f2f3;
+  --color-muted: #a99fa6;
+  --color-line: rgb(255 255 255 / 0.09);
+  --color-crimson: #ff2e4d;
+  --color-violet: #a259ff;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-instrument), Georgia, 'Times New Roman', serif;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  -webkit-text-size-adjust: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.2) transparent;
+}
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+body {
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: rgb(255 46 77 / 0.45);
+  color: #fff;
+}
+:focus-visible {
+  outline: 2px solid var(--color-violet);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* Reveal styles apply only when JS + motion are available (see layout motion gate). */
+html.motion-ok [data-reveal]:not([data-revealed]) {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+}
+html.motion-ok [data-hero]:not([data-revealed]) {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+}
+
+/* ---------- Glass system ----------
+   Blur is applied ONLY to these UI surfaces (backdrop-filter), never to the canvas, text or icons.
+   .glass       big panels/cards         (blur + rim light + sheen)
+   .glass-pill  standalone controls      (blur)
+   .glass-bar   header / footer          (blur)
+   .glass-chip / .glass-field            (no blur: they sit inside a .glass panel, where a nested
+                                          backdrop-filter has nothing to sample and only costs GPU time)
+   Modifiers: .glass-hover (rim/sheen brighten), .glass-lift (+3px rise)                           */
+@layer components {
+  .glass {
+    --glass-blur: 8px;
+    position: relative;
+    isolation: isolate;
+    background:
+      linear-gradient(150deg, rgb(255 255 255 / 0.085) 0%, rgb(255 255 255 / 0.02) 38%, rgb(255 255 255 / 0) 100%),
+      rgb(12 7 14 / 0.64);
+    border: 1px solid rgb(255 255 255 / 0.1);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.14),
+      inset 0 -1px 0 rgb(0 0 0 / 0.35),
+      0 2px 8px rgb(0 0 0 / 0.25),
+      0 22px 50px -20px rgb(0 0 0 / 0.75);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.2);
+    transition:
+      border-color 0.4s var(--ease-out-expo),
+      box-shadow 0.4s var(--ease-out-expo),
+      background-color 0.4s var(--ease-out-expo),
+      transform 0.4s var(--ease-out-expo);
+  }
+  /* Rim light: a gradient hairline, bright at the top-left edge like light catching glass. */
+  .glass::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: linear-gradient(145deg, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.07) 30%, rgb(255 255 255 / 0.02) 62%, rgb(255 255 255 / 0.2));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    opacity: 0.7;
+    transition: opacity 0.4s var(--ease-out-expo);
+  }
+  /* Soft diagonal reflection. Sits behind the content (z-index -1), so text stays crisp. */
+  .glass::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(118deg, rgb(255 255 255 / 0.1) 0%, rgb(255 255 255 / 0.025) 26%, transparent 46%);
+    opacity: 0.8;
+    transition: opacity 0.4s var(--ease-out-expo);
+  }
+  .glass-hover:hover {
+    border-color: rgb(255 255 255 / 0.18);
+    background-color: rgb(12 7 14 / 0.58);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.2),
+      inset 0 -1px 0 rgb(0 0 0 / 0.35),
+      0 4px 12px rgb(0 0 0 / 0.3),
+      0 30px 60px -22px rgb(0 0 0 / 0.8),
+      0 0 40px -12px rgb(255 46 77 / 0.22);
+  }
+  /* Small secondary text inside glass is lifted so it stays readable over the brightest smoke. */
+  .glass .text-muted,
+  .glass .eyebrow {
+    color: #d6ccd2;
+  }
+  .glass-hover:hover::before,
+  .glass-hover:hover::after {
+    opacity: 1;
+  }
+  .glass-lift:hover {
+    transform: translate3d(0, -3px, 0);
+  }
+
+  .glass-pill {
+    background:
+      linear-gradient(160deg, rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.03)),
+      rgb(12 7 14 / 0.4);
+    border: 1px solid rgb(255 255 255 / 0.16);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.18),
+      0 8px 24px -10px rgb(0 0 0 / 0.6);
+    backdrop-filter: blur(6px) saturate(1.2);
+    transition:
+      background-color 0.3s var(--ease-out-expo),
+      border-color 0.3s var(--ease-out-expo),
+      box-shadow 0.3s var(--ease-out-expo),
+      color 0.3s;
+  }
+  .glass-pill:hover:not(:disabled) {
+    border-color: rgb(255 255 255 / 0.32);
+    background-color: rgb(12 7 14 / 0.3);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.26),
+      0 10px 28px -10px rgb(0 0 0 / 0.65),
+      0 0 24px -8px rgb(162 89 255 / 0.35);
+  }
+
+  .glass-bar {
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.01)), rgb(8 5 10 / 0.6);
+    border-color: rgb(255 255 255 / 0.1);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+    backdrop-filter: blur(8px) saturate(1.2);
+  }
+  .glass-bar-strong {
+    background-color: rgb(8 5 10 / 0.82);
+  }
+
+  .glass-chip {
+    background: linear-gradient(160deg, rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.03));
+    border: 1px solid rgb(255 255 255 / 0.12);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
+    transition:
+      background-color 0.3s,
+      border-color 0.3s,
+      box-shadow 0.3s;
+  }
+  .glass-chip:hover {
+    border-color: rgb(255 255 255 / 0.28);
+    background: linear-gradient(160deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.05));
+  }
+
+  .glass-field {
+    /* Darker flat tint, no backdrop-filter: fields sit inside a .glass panel, where a nested blur
+       adds GPU cost without sampling anything useful. */
+    background: rgb(5 3 6 / 0.55);
+    border: 1px solid rgb(255 255 255 / 0.12);
+    box-shadow:
+      inset 0 2px 6px rgb(0 0 0 / 0.35),
+      0 1px 0 rgb(255 255 255 / 0.06);
+    transition:
+      border-color 0.3s,
+      background-color 0.3s,
+      box-shadow 0.3s;
+  }
+  .glass-field:hover:not(:disabled) {
+    border-color: rgb(255 255 255 / 0.22);
+  }
+  .glass-field:focus {
+    border-color: var(--color-violet);
+    background: rgb(5 3 6 / 0.6);
+    box-shadow:
+      inset 0 2px 6px rgb(0 0 0 / 0.35),
+      0 0 0 3px rgb(162 89 255 / 0.22);
+  }
+}
+
+/* Phones: minimal blur and a denser tint, since the canvas repaints on every scroll frame. */
+@media (max-width: 767px) {
+  .glass {
+    --glass-blur: 4px;
+    background-color: rgb(12 7 14 / 0.74);
+  }
+  .glass-pill,
+  .glass-bar {
+    backdrop-filter: blur(4px);
+  }
+  .glass-pill { background-color: rgb(12 7 14 / 0.55); }
+  .glass-bar { background-color: rgb(8 5 10 / 0.74); }
+  .wa-cta {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: rgb(12 7 14 / 0.8);
+  }
+}
+/* Services cards: lighter glass so the frame behind stays sharp and clear. Blur and tint are both low;
+   the border, rim light and shadow still define the card edge. */
+.glass.glass-subtle {
+  --glass-blur: 5px;
+  background:
+    linear-gradient(150deg, rgb(255 255 255 / 0.07) 0%, rgb(255 255 255 / 0.015) 40%, rgb(255 255 255 / 0) 100%),
+    rgb(12 7 14 / 0.34);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.1);
+}
+.glass.glass-subtle.glass-hover:hover {
+  background-color: rgb(12 7 14 / 0.3);
+}
+
+
+
+/* ---------- Preloader ----------
+   Visible only while <html data-preloader> is "active" or "leaving" (set by the inline script in layout.tsx),
+   so it never shows without JS, on repeat visits in a session, or after the failsafe timeout. */
+html {
+  scrollbar-gutter: stable; /* scroll lock must not make the page jump when the loader goes away */
+}
+.preloader {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(60% 45% at 50% 50%, rgb(255 46 77 / 0.07), transparent 70%),
+    #050505;
+  color: #fff;
+  will-change: transform;
+}
+html[data-preloader='active'] .preloader,
+html[data-preloader='leaving'] .preloader {
+  display: flex;
+}
+.preloader-inner {
+  display: flex;
+  width: 100%;
+  max-width: 34rem;
+  flex-direction: column;
+  align-items: center;
+}
+.preloader-label,
+.preloader-meta {
+  margin: 0;
+  padding-left: 0.24em; /* balances trailing letter-spacing so the text stays optically centred */
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  text-align: center;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.55);
+}
+.preloader-label {
+  animation: kp-fade 0.9s var(--ease-out-expo) 0.05s both;
+}
+.preloader-meta {
+  margin-top: 0.9rem;
+  font-size: 0.65rem;
+  animation: kp-fade 0.9s var(--ease-out-expo) 0.6s both;
+}
+.preloader-name {
+  display: flex;
+  margin: 1.75rem 0 0;
+  padding-left: 0.06em; /* balances the trailing letter-spacing so the name sits optically centred */
+  gap: 0.34em;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 11vw, 6rem);
+  line-height: 1;
+  letter-spacing: 0.06em;
+}
+.preloader-word {
+  display: inline-flex;
+}
+.preloader-word[data-word='1'] {
+  --kp-color: #d8d2d6;
+}
+.kp-letter {
+  display: inline-block;
+  opacity: 0;
+  --kp-color: #fff;
+  animation: kp-letter 0.9s var(--ease-out-expo) both;
+}
+@keyframes kp-letter {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 1.25rem, 0);
+    color: #ff2e4d;
+    text-shadow: 0 0 0 rgb(255 46 77 / 0);
+  }
+  45% {
+    opacity: 1;
+    color: #ffd2d9;
+    text-shadow: 0 0 28px rgb(255 46 77 / 0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    color: var(--kp-color);
+    text-shadow: 0 0 22px rgb(255 46 77 / 0.14);
+  }
+}
+@keyframes kp-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* Dismissal: the content fades, then the whole overlay lifts away like a curtain. */
+.preloader[data-state='leaving'] {
+  pointer-events: none;
+  transform: translate3d(0, -100%, 0);
+  transition: transform 0.95s cubic-bezier(0.76, 0, 0.24, 1) 0.12s;
+}
+.preloader[data-state='leaving'] .preloader-inner {
+  opacity: 0;
+  transform: translate3d(0, -1rem, 0);
+  transition:
+    opacity 0.4s ease,
+    transform 0.6s var(--ease-out-expo);
+}
+@media (prefers-reduced-motion: reduce) {
+  .kp-letter,
+  .preloader-label,
+  .preloader-meta {
+    animation: none;
+    opacity: 1;
+  }
+  .kp-letter {
+    color: var(--kp-color);
+  }
+  .preloader[data-state='leaving'] {
+    transform: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+}
+
+/* ---------- Bars, nav links, image frame ---------- */
+/* Hairline accents: crimson-to-violet, fading at both ends. Painted as a pseudo-element, so no extra filter. */
+/* Positioned by the element itself (header is fixed, footer is relative). */
+.bar-hairline::after,
+.bar-hairline-top::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgb(255 46 77 / 0.55) 30%, rgb(162 89 255 / 0.55) 70%, transparent);
+}
+.bar-hairline::after {
+  bottom: -1px;
+}
+.bar-hairline-top::before {
+  top: -1px;
+}
+
+/* Underline grows from the left on hover and stays on for the current section. */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0.75rem;
+  bottom: 0.2rem;
+  height: 1px;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: linear-gradient(90deg, #ff2e4d, #a259ff);
+  transition: transform 0.4s var(--ease-out-expo);
+}
+.nav-link:hover::after,
+.nav-link[aria-current='location']::after {
+  transform: scaleX(1);
+}
+
+/* Image-led card frame: same border/shadow language as .glass but without a backdrop-filter,
+   because the card is filled by its own image and has nothing to blur. */
+.glass-frame {
+  isolation: isolate;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    0 2px 8px rgb(0 0 0 / 0.25),
+    0 22px 50px -20px rgb(0 0 0 / 0.75);
+  transition:
+    border-color 0.4s var(--ease-out-expo),
+    box-shadow 0.4s var(--ease-out-expo);
+}
+.glass-frame:hover,
+.glass-frame:focus-within {
+  border-color: rgb(255 255 255 / 0.28);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    0 4px 12px rgb(0 0 0 / 0.3),
+    0 30px 60px -22px rgb(0 0 0 / 0.8),
+    0 0 44px -14px rgb(255 46 77 / 0.3);
+}
+
+/* Primary WhatsApp call to action (Contact): dark glass, crimson edge, green brand mark. */
+.wa-cta {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  overflow: hidden;
+  min-height: 3.5rem;
+  padding: 0.5rem 1.5rem 0.5rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid rgb(255 46 77 / 0.4);
+  background:
+    linear-gradient(135deg, rgb(255 46 77 / 0.16), rgb(162 89 255 / 0.1) 70%),
+    rgb(12 7 14 / 0.62);
+  -webkit-backdrop-filter: blur(6px) saturate(1.2);
+  backdrop-filter: blur(6px) saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.16),
+    0 10px 30px -12px rgb(0 0 0 / 0.7);
+  color: #fff;
+  transition:
+    transform 0.4s var(--ease-out-expo),
+    border-color 0.4s var(--ease-out-expo),
+    box-shadow 0.4s var(--ease-out-expo);
+}
+.wa-cta::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.14) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform 0.9s var(--ease-out-expo);
+}
+.wa-cta-icon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border-radius: 9999px;
+  background: rgb(37 211 102 / 0.14);
+  border: 1px solid rgb(37 211 102 / 0.35);
+  color: #25d366;
+  transition: transform 0.4s var(--ease-out-expo);
+}
+.wa-cta:hover {
+  transform: translateY(-2px);
+  border-color: rgb(255 46 77 / 0.75);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.24),
+    0 14px 36px -12px rgb(0 0 0 / 0.75),
+    0 0 40px -10px rgb(255 46 77 / 0.55);
+}
+.wa-cta:hover::after {
+  transform: translateX(120%);
+}
+.wa-cta:hover .wa-cta-icon {
+  transform: scale(1.08);
+}
+.wa-cta:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: 0.12s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wa-cta::after {
+    display: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .wa-cta {
+    background: rgb(12 7 14 / 0.94);
+    backdrop-filter: none;
+  }
+}
+
+/* Users who ask the OS for less transparency get dense surfaces instead of glass. */
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .glass.glass-subtle { background: rgb(12 7 14 / 0.94); backdrop-filter: none; }
+  .glass-pill { background: rgb(12 7 14 / 0.9); backdrop-filter: none; }
+  .glass-bar { background: rgb(8 5 10 / 0.96); backdrop-filter: none; }
+  .glass-field { background: rgb(5 3 6 / 0.85); backdrop-filter: none; }
+}
+
+/* No backdrop-filter support: fall back to a denser tint so text stays readable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass { background-color: rgb(12 7 14 / 0.86); }
+  .glass-pill { background-color: rgb(12 7 14 / 0.7); }
+  .glass-bar { background-color: rgb(8 5 10 / 0.9); }
+}
+
+.legibility-scrim {
+  background:
+    linear-gradient(90deg, rgb(5 5 5 / 0.72) 0%, rgb(5 5 5 / 0.38) 42%, rgb(5 5 5 / 0.12) 72%, rgb(5 5 5 / 0.22) 100%),
+    linear-gradient(180deg, rgb(5 5 5 / 0.45) 0%, rgb(5 5 5 / 0) 22%, rgb(5 5 5 / 0) 70%, rgb(5 5 5 / 0.6) 100%);
+}
+/* Narrow screens stack the text over the subject, so use a stronger, non-directional wash. */
+@media (max-width: 1023px) {
+  .legibility-scrim {
+    background:
+      linear-gradient(180deg, rgb(5 5 5 / 0.55) 0%, rgb(5 5 5 / 0.5) 45%, rgb(5 5 5 / 0.55) 75%, rgb(5 5 5 / 0.7) 100%);
+  }
+}
+.text-gradient {
+  background: linear-gradient(100deg, #ff5d73 0%, #ff2e4d 30%, #c15bff 75%, #a259ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.section-shell {
+  width: 100%;
+  max-width: 76rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 5vw, 3rem);
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes scroll-cue {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+.scroll-cue::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent, #fff, transparent);
+  animation: scroll-cue 2.2s var(--ease-out-expo) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
